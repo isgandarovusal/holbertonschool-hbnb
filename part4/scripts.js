@@ -143,3 +143,55 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchPlaceDetails(token, placeId);
     }
 });
+
+// Rəy forması üçün xüsusi məntiq
+document.addEventListener('DOMContentLoaded', () => {
+    const reviewForm = document.getElementById('review-form');
+    
+    // Əgər rəy səhifəsindəyiksə
+    if (reviewForm) {
+        const token = getCookie('token');
+        const placeId = getPlaceIdFromURL();
+
+        // 1. Authentication Check
+        if (!token) {
+            alert('You must be logged in to add a review.');
+            window.location.href = 'index.html';
+            return;
+        }
+
+        // 2. Form Submission
+        reviewForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const text = document.getElementById('review-text').value;
+            const rating = document.getElementById('rating').value;
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/v1/reviews/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        place_id: placeId,
+                        text: text,
+                        rating: parseInt(rating)
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Review submitted successfully!');
+                    window.location.href = `place.html?id=${placeId}`;
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.msg || 'Failed to submit review'));
+                }
+            } catch (err) {
+                console.error('Submission error:', err);
+                alert('An error occurred while submitting your review.');
+            }
+        });
+    }
+});
