@@ -16,3 +16,20 @@ def update_user_profile():
     
     updated_user = facade.update_user(current_user_id, data)
     return jsonify(updated_user), 200
+
+@users_bp.route('/', methods=['POST'])
+@jwt_required()
+@admin_required()
+def admin_create_user():
+    data = request.get_json()
+    # Unique email yoxlaması facade daxilində olmalıdır
+    new_user = facade.create_user(data)
+    return jsonify(new_user), 201
+
+@users_bp.route('/<user_id>', methods=['PUT'])
+@jwt_required()
+@admin_required()
+def admin_update_user(user_id):
+    data = request.get_json()
+    updated_user = facade.update_user(user_id, data)
+    return jsonify(updated_user), 200
