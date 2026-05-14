@@ -72,3 +72,74 @@ document.addEventListener('DOMContentLoaded', () => {
 
     checkAuthentication();
 });
+
+// URL-dən Place ID-ni götürür
+function getPlaceIdFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('id');
+}
+
+async function fetchPlaceDetails(token, placeId) {
+    try {
+        const response = await fetch(`http://127.0.0.1:5000/api/v1/places/${placeId}`, {
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        });
+        if (response.ok) {
+            const place = await response.json();
+            displayPlaceDetails(place);
+        } else {
+            alert('Could not fetch place details');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+function displayPlaceDetails(place) {
+    const detailsSection = document.getElementById('place-details');
+    if (!detailsSection) return;
+
+    // Amenity-ləri və Rəyləri list şəklində hazırla
+    const amenities = place.amenities.map(a => `<li>${a.name}</li>`).join('');
+    const reviews = place.reviews.map(r => `
+        <div class="review-card">
+            <p><strong>${r.user_name}:</strong> ${r.text}</p>
+            <p>Rating: ${r.rating}/5</p>
+        </div>
+    `).join('');
+
+    detailsSection.innerHTML = `
+        <div class="place-info">
+            <h1>${place.title}</h1>
+            <p><strong>Host:</strong> ${place.owner_name}</p>
+            <p><strong>Price:</strong> $${place.price} per night</p>
+            <p><strong>Description:</strong> ${place.description}</p>
+        </div>
+        <div class="amenities">
+            <h3>Amenities</h3>
+            <ul>${amenities || '<li>No amenities listed</li>'}</ul>
+        </div>
+        <div class="reviews">
+            <h3>Reviews</h3>
+            ${reviews || '<p>No reviews yet.</p>'}
+        </div>
+    `;
+}
+
+// Səhifə yüklənəndə Place Details səhifəsində olub-olmadığımızı yoxla
+document.addEventListener('DOMContentLoaded', () => {
+    const placeId = getPlaceIdFromURL();
+    const detailsSection = document.getElementById('place-details');
+
+    if (placeId && detailsSection) {
+        const token = getCookie('token');
+        const addReviewSection = document.getElementById('add-review');
+
+        if (token) {
+            if (addReviewSection) addReviewSection.style.display = 'block';
+        }
+        fetchPlaceDetails(token, placeId);
+    }
+});
